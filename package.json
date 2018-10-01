@@ -1,13 +1,13 @@
 {
-  "name": "wn-pi-cam",
+  "name": "pi-camera-to-s3",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Wietse Neven <hello@wietseneven.com>",
+  "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.323.0",
     "compress-images": "^1.4.2",
