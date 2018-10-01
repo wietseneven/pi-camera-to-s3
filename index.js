@@ -1,66 +1,66 @@
-const AWS = require('aws-sdk');
-const fs = require('fs');
-const PiCamera = require('pi-camera');
-const moment = require('moment');
+const AWS = require('aws-sdk')
+const fs = require('fs')
+const PiCamera = require('pi-camera')
+const moment = require('moment')
 
-const BUCKET_NAME = 'pycamera';
+const c = require('./config')
 
 const s3bucket = new AWS.S3({
-   Bucket: BUCKET_NAME,
- });
+  Bucket: c.bucketName,
+})
 
-function uploadToS3(file) {
- s3bucket.createBucket(function () {
-   var params = {
-    Bucket: BUCKET_NAME,
-    Key: `${file.today}/${file.name}`,
-    Body: file.data,
-   };
-   s3bucket.upload(params, function (err, data) {
-    if (err) {
-     console.log('error in callback');
-     console.log(err);
-    }
-    console.log('success');
-    console.log(data);
-    fs.unlink(`${ __dirname }/images/${ file.name }`, (err) => {
-      if (err) throw err;
-      console.log(`${ __dirname }/images/${ file.name } was deleted`);
-    });
-   });
- });
-}
+const uploadToS3 = params =>
+  new Promise((resolve, reject) => {
+    s3bucket.upload(params, (err, data) => {
+      if (err) {
+        console.error('error in upload', err)
+        reject(err)
+      }
+      console.log('success', data)
+      resolve(data)
+    })
+  })
 
-function takePhotoAndUpload() {
-  const now = moment().format('YYYYMMDDkkmmss');
-  const today = moment().format('YYYY-MM-DD');
-  const file = `${ __dirname }/images/${now}.jpg`;
-  const compressed = `${ __dirname }/compressed/`;
+const readFile = file =>
+  new Promise((resolve, reject) => {
+    fs.readFile(file, (error, data) => {
+      if (error) reject(error)
+      resolve(data)
+    })
+  })
+
+const deleteFile = file =>
+  new Promise((resolve, reject) => {
+    fs.unlink(file, (err) => {
+      if (err) reject(err)
+      resolve(`${ file } was deleted`)
+    })
+  })
+
+const takePhotoAndUpload = () => {
+  const today = moment().format('YYYY-MM-DD')
+  const fileName = `${moment().format('YYYYMMDDkkmmss')}.jpg`
+  const file = `${ __dirname }/images/${fileName}`
 
   const myCamera = new PiCamera({
     mode: 'photo',
     output: file,
-    width: 1280,
-    height: 720,
-    quality: 60,
     nopreview: true,
-  });
+    ...c.camera,
+  })
 
   myCamera.snap()
-    .then((result) => {
-      console.log(result);
-
-      fs.readFile(file, (error, data) => {
-        if (error) {
-          console.log('Error reading file!', error);
-          return;
-        }
-        uploadToS3({name: `${now}.jpg`, data: data, today: today});
-      });
-    })
+    .then(() => readFile(file))
+    .then(data => uploadToS3({
+        Bucket: c.bucketName,
+        Key: `${today}/${fileName}`,
+        Body: data,
+      })
+    )
+    .then(() => deleteFile(fileName))
     .catch((error) => {
-      console.error('error!', error);
-    });
+      console.error('error!', error)
+    })
 }
 
-setInterval(takePhotoAndUpload, 20000);
+setInterval(takePhotoAndUpload, c.interval)
