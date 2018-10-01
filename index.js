@@ -57,7 +57,7 @@ const takePhotoAndUpload = () => {
         Body: data,
       })
     )
-    .then(() => deleteFile(fileName))
+    .then(() => deleteFile(file))
     .catch((error) => {
       console.error('error!', error)
     })
