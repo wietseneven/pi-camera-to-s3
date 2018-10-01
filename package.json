@@ -1,0 +1,17 @@
+{
+  "name": "wn-pi-cam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.323.0",
+    "compress-images": "^1.4.2",
+    "moment": "^2.22.2",
+    "pi-camera": "^1.2.1"
+  }
+}
